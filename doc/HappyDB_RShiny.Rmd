@@ -19,7 +19,7 @@ From the packages' descriptions:
 + `scales` map data to aesthetics, and provide methods for automatically determining breaks and labels for axes and legends;
 + `wordcloud2` provides an HTML5 interface to wordcloud for data visualization;
 + `gridExtra` contains miscellaneous functions for "grid" graphics;
-+ `ngram` is for constructing n-grams (“tokenizing”), as well as generating new text based on the n-gram structure of a given text input (“babbling”);
++ `ngram` is for constructing n-grams (???tokenizing???), as well as generating new text based on the n-gram structure of a given text input (???babbling???);
 + `Shiny` is an R package that makes it easy to build interactive web apps straight from R;
 
 ```{r load libraries, warning=FALSE, message=FALSE}

@@ -31,7 +31,12 @@ library(scales)
 library(wordcloud2)
 library(gridExtra)
 library(ngram)
-library(shiny) 
+library(shiny)
+
+library(igraph)
+library(ggplot2)
+library(ggraph)
+
 ```
 
 ### Step 1 - Load the processed text data along with demographic information on contributors
@@ -215,7 +220,7 @@ server <- function(input, output, session) {
       ggplot(aes(word, n)) +
       geom_col() +
       xlab(NULL) +
-      ylab("Word Frequency")+
+      ylab("Word Frequency") +
       coord_flip()
   })
   

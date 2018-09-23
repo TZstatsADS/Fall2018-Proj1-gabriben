@@ -6,7 +6,7 @@ output: html_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = F)
 ```
 
 ## Intro
@@ -24,8 +24,11 @@ library(DT)
 ### Step 1 - Load the data to be cleaned and processed
 
 ```{r read data, warning=FALSE, message=FALSE}
-urlfile<-'https://raw.githubusercontent.com/rit-public/HappyDB/master/happydb/data/cleaned_hm.csv'
+urlfile <- 'https://raw.githubusercontent.com/rit-public/HappyDB/master/happydb/data/cleaned_hm.csv'
 hm_data <- read_csv(urlfile)
+chosen <- sample(hm_data$hmid, 1000)
+hm_data <- subset(hm_data, hmid %in% chosen)
+
 ```
 
 ### Step 2 - Preliminary cleaning of text
@@ -69,7 +72,8 @@ We remove stopwords provided by the "tidytext" package and also add custom stopw
 data("stop_words")
 
 word <- c("happy","ago","yesterday","lot","today","months","month",
-                 "happier","happiest","last","week","past")
+                 "happier","happiest","last","week","past", 
+                  "time", "day", "finally")
 
 stop_words <- stop_words %>%
   bind_rows(mutate(tibble(word), lexicon = "updated"))
@@ -126,30 +130,30 @@ hm_data <- hm_data %>%
 
 ## my part
 
-```{r}
+```{r other VS friends}
 
-chosen <- sample(hm_data$hmid, 1000)
-s <- subset(hm_data, hmid %in% chosen)
-
-completed <- NULL
-dict <- NULL
-hm_data <- NULL
-stemmed <- NULL
-stop_words <- NULL
+source("wordlists.R")
 
 
-head(s)
+#others <- stemDocument(others) 
 
-data("AssociatedPress")
-str(AssociatedPress)
-
-
-library("topicmodels")
-ap_lda <- LDA(s$cleaned_hm, k = 2, control = list(seed = 1234))
-getwd()
-save(s, file = "s.RData")
+library(stringr)
+hm_data$others <- 0
+for(i in 1:nrow(hm_data)){
+  hm_data$others[i] <- sum(str_detect(hm_data$text[i], others))
+}
 
 ```
+
+
+### Exporting the processed text data into a CSV file
+
+```{r export data}
+write_csv(hm_data, "../output/processed_moments.csv")
+```
+
+
+
 
 
 

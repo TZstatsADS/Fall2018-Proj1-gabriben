@@ -1,69 +1,80 @@
 ---
-title: "Happy Alone"
-author: "Gabriel"
+title: "Can we be Happy Alone?"
+author: "Gabriel Benedict"
 date: "9/23/2018"
-output: html_document
+output: 
+  html_document:
+    toc: true
+    toc_float: true 
+    theme:  paper
 ---
 
-HappyDB is a corpus of 100,000 crowd-sourced happy moments via Amazon's Mechanical Turk. You can read more about it on https://arxiv.org/abs/1801.07746.
+
+![](../figs/alone.gif)
+
+HappyDB is a corpus of 100,000 crowd-sourced happy moments collected over a 3 months period (3/28/2017 - 6/16/2017) via Amazon's Mechanical Turk (see https://arxiv.org/abs/1801.07746). Around 10'000 unique users from around the world submitted in average around 10 happy moments each.
 
 Here, we explore this data set and try to answer the question, "What makes people happy?" More precisely, are people able to be happy on their own? How do those people differ from people who feel happy thanks to their surrounding family, friends?
 
-## data
+## What defines self-made happiness?
+
+Let's define it as the capacity to make oneself happy by his own making without the interaction of other known humans, by extension friends and family. We decide here to exclude pets and job relationships, since they can both, to some extent, be categorized as self-made: both relationships with pets and one's job generally rely more heavily on one's own decisions.
 
 
-Collection period	3/28/2017 - 6/16/2017
-# happy moments	100,922
-# distinct users	10,843
-# distinct words	38,188
-Avg. # happy moments / user	9.31
-Avg. # words / happy moment	19.66
-
-### Step 0 - Load all the required libraries
-
-From the packages' descriptions:
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = F, warning=F, message=F)
+# enable warnings and messages when changing something
+```
 
 
 ```{r load libraries, warning=FALSE, message=FALSE}
 
-library(tidyverse)
-library(tidytext)
-library(DT)
-library(ngram)
-library(wordcloud2)
+# list of used packages
 
-library(scales)
+packages <- c("tidyverse", 
+              "tidytext", 
+              "wordcloud", 
+              "ngram", 
+              "wordcloud2", 
+              "gridExtra",
+              "ggradar")
 
-library(gridExtra)
+# ggradar was forked to my github to modify the font.
+# For the original package see https://github.com/ricardo-bion/ggradar
+if(!"ggradar" %in% rownames(installed.packages())){
+  devtools::install_github("gabriben/ggradar")
+}
 
-library(shiny) 
+# Install and load packages only if needed
+package.check <- lapply(packages, FUN = function(x) {
+  if (!require(x, character.only = T)) install.packages(x)
+  if (! (x %in% (.packages() )))  library(x, character.only = T)
+})
+
 ```
 
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = F)
-```
 
-## What defines self-made happiness?
 
-Let's define it as the capacity to make oneself happy by his own making without the interaction of other known humans. We decide here to exclude pets and job relationships, since they can both, to some extent, be categorized as self-made: both relationship generally rely more heavily on one's own decisions.
-
-### Step 1 - Load the processed text data along with demographic information on contributors
-
-We use the processed data for our analysis and combine it with the demographic information available.
 
 ```{r load data, warning=FALSE, message=FALSE}
+
+# Step 1 - Load the processed text data along with demographic information on contributors
+# We use the processed data for our analysis and combine it with the demographic information available.
+
 hm_data <- read_csv("../output/processed_moments.csv")
 
 urlfile<-'https://raw.githubusercontent.com/rit-public/HappyDB/master/happydb/data/demographic.csv'
 demo_data <- read_csv(urlfile)
 ```
 
-### Combine both the data sets and keep the required columns for analysis
 
-We select a subset of the data that satisfies specific row conditions.
 
 ```{r combining data, warning=FALSE, message=FALSE}
+
+# Combine both the data sets and keep the required columns for analysis
+# We select a subset of the data that satisfies specific row conditions.
+
 hm_data <- hm_data %>%
   inner_join(demo_data, by = "wid") %>%
   select(wid,
@@ -87,12 +98,105 @@ hm_data <- hm_data %>%
 ```
 
 
-## boxplot alone vs others
+# Exploratory Analysis
+
+## Countries
+
+100 countries were sampled unequally as illustrated by the histogram below of the 20 most sampled countries. This renders comparisons difficult. We will only compare USA and India, given that they both contain a relatively high number of observations. The wordcloud below, shows the relative sample size in log scale, so as to be able to see which countries where represented most (such that USA and India are artificially scaled down).
 
 
-### Create a bag of words using the text data
+```{r countries bars, fig.align='center', fig.height = 1.5}
+
+# generate a frequency table of the occurences of countries 
+
+countries <- as.data.frame(table(demo_data$country))
+names(countries) <- c("country", "freq")
+countries <- countries[order(countries$freq, decreasing = T),]
+
+# order them
+countries$country <- 
+  factor(countries$country, 
+         levels = countries$country[order(countries$freq, decreasing = T)])
+
+# bar plot
+ggplot(countries[1:20,], aes(country, freq)) +
+  geom_bar(stat = "identity") + theme_classic()
+```
+
+```{r countries cloud, fig.align='center', fig.width = 8}
+
+# wordcloud of log transformed country frequencies
+
+countries$freq <- (countries$freq + 1) %>% log()
+wordcloud2(countries, size = 1, rotateRatio = 0, hoverFunction = NULL)
+
+```
+
+
+
+## The happy alone and the happy with others
+
+
+We previously defined what it is to be alone when seeking happiness. In practice, two lists of words, one related to family and one to friends, were used: if a happiness statement contains one of those words, then we categorise the statement as mentioning \texttt{others}. If it doesn't, the statement is considered to describe happiness \texttt{alone}.
+
+Once categorization is done, we can attempt to describe what kind of people are those who are happy on their own. The boxplots below show a boxpot of the number of mentions of others per sentence in each category. It seems that there is a trend for married women who have children and who live in India, to be slightly more relyant on others for happiness. This last statement has only few grounding in data, given the obvious similarity betwen those two groups, regarding those variables: a statistical test would show no difference between groups.
+
+
+```{r boxplots, fig.align='center', fig.width = 6}
+
+# create boxplots of the two groups against several demographic variables
+
+# change the name of some categories to more equivocal names
+hm_data %>% mutate(gender = 
+                     if_else(gender == "f", "female", "male")) -> hm_data
+hm_data %>% mutate(parenthood = 
+                     if_else(parenthood == "y", "yes", "no")) -> hm_data
+
+par(mfrow = c(2,2), mar = c(1,1,1,1) + 1)
+boxplot(others/count ~ gender, hm_data, frame = F, col = c("lightgreen", "lightblue"))
+title("gender")
+boxplot(others/count ~ marital, hm_data, frame = F, col = c("lightgreen", "lightblue"))
+title("marital status")
+boxplot(others/count ~ parenthood, hm_data, frame = F, col = c("lightgreen", "lightblue"))
+title("parenthood")
+boxplot(others/count ~ country, hm_data, subset = country %in% c("USA", "IND"),
+        frame = F, col = c("lightgreen", "lightblue"))
+title("lives in ...")
+par(mfrow = c(1,1))
+
+```
+
+
+Regarding age, below is a scatter plot of age against the same indicator (mentions of others over number of words in statement). A blue line and a shaded area show a loess curve and its confidence interval. This seems to imply that our tendency to resort to others in order to fulfill our happiness level remains the same accross time. Note that there is a very slight but discernable decrease (even in the crowded data) suggesting that we might tend to resort less to others for our happiness over time. Note that this is not pure time series data: there is no following of a single person over several ages. This would be required in order to make a strong proof of the previous statement.
+
+
+```{r age, fig.align='center'}
+
+# scatter plot with loess curve
+
+hm_data$age <- as.double(hm_data$age)
+
+ggplot(subset(hm_data, age < 150), aes(age, others/count)) + 
+  geom_point(size = 0.5) + geom_smooth(span = 0.3, size = 0.4) +
+  theme_classic() +
+  theme(panel.grid.major = element_blank(),
+      panel.grid.minor = element_blank(),
+      axis.line = element_line(colour = 'black', size = .2),
+      axis.ticks = element_line(colour = "black", size = .2)) +
+  labs(y = "number of mentions of others per statement")
+# for some reason, some people were over 150 years old.
+```
+
+
+## Most used words
+
+As a last exploratory step, two word clouds are ploted illustrating the prevalence of the most used words. Note that the words related to the family have been ignored in the group that did rely on others for happiness, since they do not confer new information.
+
 
 ```{r bag of words, warning=FALSE, message=FALSE}
+
+# create different bag of words for each group
+
 hm_data_alone <- hm_data[hm_data$others == 0,]
 hm_data_others <- hm_data[hm_data$others > 0,]
 
@@ -104,68 +208,171 @@ word_count_others <- hm_data_others %>%
   unnest_tokens(word, text) %>%
   count(word, sort = TRUE)
 
+# don't consider friends and family words in the wordcloud
 source("wordlists.R")
 word_count_others <- word_count_others[! word_count_others$word %in% others,]
 
 ```
 
 
-```{r}
-wordcloud2(word_count_alone[1:20,], size = 0.6,
-                 rotateRatio = 0)
+```{r fig.width=10, fig.height=6, fig.align='center'}
 
-```
+# plotting one wordcloud per group
 
-## cddsds
-
-
-```{r}
-wordcloud2(word_count_others[1:20,], size = 0.6,
-                 rotateRatio = 0)
-
-```
-
-
-### Create bigrams using the text data
-
-```{r bigram, warning=FALSE, message=FALSE}
-hm_bigrams <- hm_data %>%
-  filter(count != 1) %>%
-  unnest_tokens(bigram, text, token = "ngrams", n = 2)
-
-bigram_counts <- hm_bigrams %>%
-  separate(bigram, c("word1", "word2"), sep = " ") %>%
-  count(word1, word2, sort = TRUE)
-
-# bigram
-
-
+par(mfrow = c(1,2))
+wordcloud(word_count_alone[1:10,]$word, word_count_alone[1:10,]$n, 
+          colors = "red")
+title("happiness alone")
+wordcloud(word_count_others[1:10,]$word, word_count_others[1:10,]$n, 
+          colors = "orange")
+title("happiness with others")
+par(mfrow = c(1,1))
 ```
 
 
+It seems that enjoying the instant is something that is easier with friends or family. School can even be part of a happy moment this way. The  When alone, one plays games, watches media and buys goods. Consuming is thus much more of a primary resort for happiness. Alternatively, achievements ("started", "finished") are a great driver for happiness. The presence of \texttt{favorite} probably indicates that more time is devoted to one's preferred activities. Unsurprisingly, pets are a way to find the loving interaction. This can be opposed to interactions with others: \texttt{feel}, \texttt{visit}, \texttt{nice}.
+
+Note the interesting presence of \texttt{night} when alone and \texttt{day} when with others.
 
 
+# Sentiment Analysis
 
-```{r cars}
-# library("topicmodels")
-# ap_lda <- LDA(s$cleaned_hm, k = 2, control = list(seed = 1234))
-# getwd()
-# 
-# s$cleaned_hm
+For this part, two different data sets are used: 
++ `AFINN` which contain words and their bipolar gradation on the scale of negative to positive feelings ([link](http://www2.imm.dtu.dk/pubdb/views/publication_details.php?id=6010))
++ `nrc` which contains words and their affiliation to eight basic emotions; namely anger, fear, anticipation, trust, surprise, sadness, joy, and disgust([link](http://saifmohammad.com/WebPages/NRC-Emotion-Lexicon.htm))
+
+## From negative to positive feelings
+
+Using the dataset `AFINN` (accessible through the package \texttt{tidytext}), we compute a mean score for each happiness statement, depending on finding matches within `AFINN` and their respective feeling score.
+
+```{r sentScore, fig.align='center'}
+
+# match our dataset and AFINN to extract the sentiment scores
+
+sentScore <- get_sentiments("afinn")
+  
+aloneScore <- hm_data %>%
+  filter(others == 0) %>%
+  unnest_tokens(word, text) %>%
+  inner_join(sentScore) %>%
+  group_by(wid) %>%
+  dplyr::summarize(mean(score))
+
+othersScore <- hm_data %>%
+  filter(others > 0) %>%
+  unnest_tokens(word, text) %>%
+  inner_join(sentScore) %>%
+  group_by(wid) %>%
+  dplyr::summarize(mean(score))
+
+boxplot(aloneScore$`mean(score)`, othersScore$`mean(score)`, frame = F,
+        ylab = "sentiment score", names = c("alone", "with others"),
+        col = c("red", "orange"))
+```
+There is evidence to suggest that people who resort to family and friends for happiness tend to have more positive sentiments. We now turn to the `nrc` dataset which gives a more nuanced view.
+
+## Eight basic Emotions
+
+This time around, words within the happiness statements are matched with words and their respective category among the eight basic emotions (data set `nrc`). This time the overall prevalence of each emotion is measured relative to the seven others. Since a sence of proportionality is already given by the previous operation, there is no need to standardize by the length or number of statements.
+
+```{r sentCat, fig.align='center'}
+
+# match our dataset and nrc to extract the corresponding eight sentiments
+
+sentCat <- get_sentiments("nrc")
+sentCat <- sentCat[!sentCat$sentiment %in% c("positive", "negative"),]
+# ignoring the positive/negative dilemma, since already treated above
+
+Cat <- list()
+for(i in c("alone", "others")){
+  
+  #matching
+  Cat[[i]] <- hm_data %>%
+    {if(i == "alone") 
+      filter(., others == 0) 
+      else filter(.,others > 0)} %>%
+    unnest_tokens(word, text) %>%
+    inner_join(sentCat) %>%
+    group_by(sentiment) %>%
+    dplyr::summarize(n = n()) %>%
+    mutate(freq = n / sum(n))
+  
+  # transposing
+  row.names(Cat[[i]]) <- Cat[[i]]$sentiment
+  Cat[[i]] <- Cat[[i]] %>% 
+   rownames_to_column %>% 
+   gather(var, value, -rowname) %>% 
+   spread(rowname, value) %>%
+   slice(1) %>% select(-1)
+}
+
+# combining the data of the two groups and preparing for the radar plot
+hmCat <- rbind(Cat$alone, Cat$others)
+hmCat %>% add_column("group", .before = 1) -> hmCat
+hmCat %>% mutate_at(1:ncol(hmCat), as.double) -> hmCat
+hmCat[,1] <- as.factor(c("alone", "others"))
+
+# radar plot
+ggradar(hmCat,
+        values.radar = c("", "20%", "40%"),                       
+        grid.min=0,  #10,
+        grid.mid=0.2,  #50,
+        grid.max=0.4,  
+        grid.label.size=4,
+        group.line.width = 0.5,
+        gridline.mid.colour="grey",
+        group.point.size = 1,
+        plot.legend = F,
+        legend.text.size = 9,
+        axis.label.size = 4)
+
 ```
 
+From a general point of view, there is no significant difference between the prevalence of those eight basic sentiments. Note that people happy on their own do feel more anger and sadness, while people resorting to friends and family do feel more joy.
+
+
+# Conclusion
+
+
+
+
+
+Note that words are dissociated from their context: bad sounding words could be turned into positive naration, given the right context. The results there are to be taken with caution , but we can expect that over the amount of data available, some negative words can be stripped of their meaning. Maybe the usage of Natural Language Processing with full sentences is a solution.
+
+Note that, in order to simplify the analysis, we did not take into account that each person had 3 statements. Rather each statement was taken as a standalone, regardless of whether it was from the same person or not. Aggregating all three statements of each person and analysing data per person instead of per statement would have been another possibility. This supposes homogeneity w
+
+
+> Qu'est-ce que le bonheur sinon le simple accord entre un etre et l existence qu il mene? 
+> (Camus, Noces p.65)
+
+
+
+\clearpage
+
+# Appendix
+
+### R Packages
 
 + `tidyverse` is an opinionated collection of R packages designed for data science. All packages share an underlying design philosophy, grammar, and data structures;
 + `tidytext` allows text mining using 'dplyr', 'ggplot2', and other tidy tools;
-+ `DT` provides an R interface to the JavaScript library DataTables;
-+ `scales` map data to aesthetics, and provide methods for automatically determining breaks and labels for axes and legends;
++ `wordcloud` Functionality to create pretty word clouds, visualize differences and similarity between documents, and avoid over-plotting in scatter plots with text.
 + `wordcloud2` provides an HTML5 interface to wordcloud for data visualization;
 + `gridExtra` contains miscellaneous functions for "grid" graphics;
 + `ngram` is for constructing n-grams (???tokenizing???), as well as generating new text based on the n-gram structure of a given text input (???babbling???);
-+ `Shiny` is an R package that makes it easy to build interactive web apps straight from R;
++ `ggradar` ggradar radar charts for ggplot2
 
-## Sources
+The code was run on macOS 10.13.6 with `r R.Version()$version.string`
 
-Akari Asai, Sara Evensen, Behzad Golshan, Alon Halevy, Vivian Li, Andrei Lopatenko, 
-Daniela Stepanov, Yoshihiko Suhara, Wang-Chiew Tan, Yinzhan Xu, 
-``HappyDB: A Corpus of 100,000 Crowdsourced Happy Moments'', LREC '18, May 2018. (to appear)
+### References
+
++ Akari Asai, Sara Evensen, Behzad Golshan, Alon Halevy, Vivian Li, Andrei Lopatenko, Daniela Stepanov, Yoshihiko Suhara, Wang-Chiew Tan, Yinzhan Xu, "HappyDB: A Corpus of 100,000 Crowdsourced Happy Moments", LREC '18, May 2018. (to appear)
++ Silge, J., & Robinson, D. (2017). Text mining with R: A tidy approach.
+
+
+
+### R Script
+
+```{r ref.label=knitr::all_labels(),echo=TRUE,eval=FALSE, tidy = F}
+
+```
+

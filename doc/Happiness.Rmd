@@ -6,7 +6,8 @@ output: html_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = F)
+knitr::opts_chunk$set(echo = F, warning=F, message=F)
+# enable warnings and messages when changing something
 ```
 
 ## Intro
@@ -14,11 +15,17 @@ knitr::opts_chunk$set(echo = F)
 HappyDB is a corpus of 100,000 crowd-sourced happy moments via Amazon's Mechanical Turk. You can read more about it on https://arxiv.org/abs/1801.07746
 
 
-```{r load libraries, warning=FALSE, message=FALSE}
-library(tm)
-library(tidytext)
-library(tidyverse)
-library(DT)
+```{r load libraries}
+packages <- c("tidyverse", 
+              "tidytext", 
+              "tm", 
+              "DT")
+
+# Install and load packages only if needed
+package.check <- lapply(packages, FUN = function(x) {
+  if (!require(x, character.only = T)) install.packages(x)
+  if (! (x %in% (.packages() )))  library(x, character.only = T)
+})
 ```
 
 ### Step 1 - Load the data to be cleaned and processed
@@ -26,8 +33,10 @@ library(DT)
 ```{r read data, warning=FALSE, message=FALSE}
 urlfile <- 'https://raw.githubusercontent.com/rit-public/HappyDB/master/happydb/data/cleaned_hm.csv'
 hm_data <- read_csv(urlfile)
-chosen <- sample(hm_data$hmid, 1000)
-hm_data <- subset(hm_data, hmid %in% chosen)
+
+# sample of the data for testing
+# chosen <- sample(hm_data$hmid, 1000)
+# hm_data <- subset(hm_data, hmid %in% chosen)
 
 ```
 
@@ -73,7 +82,8 @@ data("stop_words")
 
 word <- c("happy","ago","yesterday","lot","today","months","month",
                  "happier","happiest","last","week","past", 
-                  "time", "day", "finally")
+                  "time", "day", "finally", "morning", "night",
+          "moment", "enjoyed")
 
 stop_words <- stop_words %>%
   bind_rows(mutate(tibble(word), lexicon = "updated"))
@@ -128,14 +138,12 @@ hm_data <- hm_data %>%
 ```
 
 
-## my part
+## Classifying statements: happiness alone or with others 
 
 ```{r other VS friends}
 
+# preprocessed words associated with being with others (family and friends)
 source("wordlists.R")
-
-
-#others <- stemDocument(others) 
 
 library(stringr)
 hm_data$others <- 0
@@ -150,6 +158,8 @@ for(i in 1:nrow(hm_data)){
 
 ```{r export data}
 write_csv(hm_data, "../output/processed_moments.csv")
+
+
 ```
 
 
@@ -164,5 +174,4 @@ write_csv(hm_data, "../output/processed_moments.csv")
 + `tidytext` allows text mining using 'dplyr', 'ggplot2', and other tidy tools;
 + `DT` provides an R interface to the JavaScript library DataTables.
 
-
- And state clearly that your Rnotebook requires so and so packages in your R notebook and what system you are running also helps. 
+The code was run on macOS 10.13.6 with `r R.Version()$version.string`

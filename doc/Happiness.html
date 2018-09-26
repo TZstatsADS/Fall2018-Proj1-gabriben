@@ -313,43 +313,96 @@ $(document).ready(function () {
 <section id="intro" class="level2">
 <h2>Intro</h2>
 <p>HappyDB is a corpus of 100,000 crowd-sourced happy moments via Amazon’s Mechanical Turk. You can read more about it on <a href="https://arxiv.org/abs/1801.07746" class="uri">https://arxiv.org/abs/1801.07746</a></p>
+<pre class="r"><code>library(tm)
+library(tidytext)
+library(tidyverse)
+library(DT)</code></pre>
 <section id="step-1---load-the-data-to-be-cleaned-and-processed" class="level3">
 <h3>Step 1 - Load the data to be cleaned and processed</h3>
+<pre class="r"><code>urlfile &lt;- 'https://raw.githubusercontent.com/rit-public/HappyDB/master/happydb/data/cleaned_hm.csv'
+hm_data &lt;- read_csv(urlfile)
+
+# sample of the data for testing
+# chosen &lt;- sample(hm_data$hmid, 1000)
+# hm_data &lt;- subset(hm_data, hmid %in% chosen)</code></pre>
 </section>
 <section id="step-2---preliminary-cleaning-of-text" class="level3">
 <h3>Step 2 - Preliminary cleaning of text</h3>
 <p>We clean the text by converting all the letters to the lower case, and removing punctuation, numbers, empty words and extra white space.</p>
+<pre class="r"><code>corpus &lt;- VCorpus(VectorSource(hm_data$cleaned_hm))%&gt;%
+  tm_map(content_transformer(tolower))%&gt;%
+  tm_map(removePunctuation)%&gt;%
+  tm_map(removeNumbers)%&gt;%
+  tm_map(removeWords, character(0))%&gt;%
+  tm_map(stripWhitespace)</code></pre>
 </section>
 <section id="step-3---stemming-words-and-converting-tm-object-to-tidy-object" class="level3">
 <h3>Step 3 - Stemming words and converting tm object to tidy object</h3>
 <p>Stemming reduces a word to its word <em>stem</em>. We stem the words here and then convert the “tm” object to a “tidy” object for much faster processing.</p>
+<pre class="r"><code>stemmed &lt;- tm_map(corpus, stemDocument) %&gt;%
+  tidy() %&gt;%
+  select(text)</code></pre>
 </section>
 <section id="step-4---creating-tidy-format-of-the-dictionary-to-be-used-for-completing-stems" class="level3">
 <h3>Step 4 - Creating tidy format of the dictionary to be used for completing stems</h3>
 <p>We also need a dictionary to look up the words corresponding to the stems.</p>
+<pre class="r"><code>dict &lt;- tidy(corpus) %&gt;%
+  select(text) %&gt;%
+  unnest_tokens(dictionary, text)</code></pre>
 </section>
 <section id="step-5---removing-stopwords-that-dont-hold-any-significant-information-for-our-data-set" class="level3">
 <h3>Step 5 - Removing stopwords that don’t hold any significant information for our data set</h3>
 <p>We remove stopwords provided by the “tidytext” package and also add custom stopwords in context of our data.</p>
+<pre class="r"><code>data(&quot;stop_words&quot;)
+
+word &lt;- c(&quot;happy&quot;,&quot;ago&quot;,&quot;yesterday&quot;,&quot;lot&quot;,&quot;today&quot;,&quot;months&quot;,&quot;month&quot;,
+                 &quot;happier&quot;,&quot;happiest&quot;,&quot;last&quot;,&quot;week&quot;,&quot;past&quot;, 
+                  &quot;time&quot;, &quot;day&quot;, &quot;finally&quot;, &quot;morning&quot;, &quot;night&quot;,
+          &quot;moment&quot;, &quot;enjoyed&quot;)
+
+stop_words &lt;- stop_words %&gt;%
+  bind_rows(mutate(tibble(word), lexicon = &quot;updated&quot;))</code></pre>
 </section>
 <section id="step-6---combining-stems-and-dictionary-into-the-same-tibble" class="level3">
 <h3>Step 6 - Combining stems and dictionary into the same tibble</h3>
 <p>Here we combine the stems and the dictionary into the same “tidy” object.</p>
+<pre class="r"><code>completed &lt;- stemmed %&gt;%
+  mutate(id = row_number()) %&gt;%
+  unnest_tokens(stems, text) %&gt;%
+  bind_cols(dict) %&gt;%
+  anti_join(stop_words, by = c(&quot;dictionary&quot; = &quot;word&quot;))</code></pre>
 </section>
 <section id="step-7---stem-completion" class="level3">
 <h3>Step 7 - Stem completion</h3>
 <p>Lastly, we complete the stems by picking the corresponding word with the highest frequency.</p>
+<pre class="r"><code>completed &lt;- completed %&gt;%
+  group_by(stems) %&gt;%
+  count(dictionary) %&gt;%
+  mutate(word = dictionary[which.max(n)]) %&gt;%
+  ungroup() %&gt;%
+  select(stems, word) %&gt;%
+  distinct() %&gt;%
+  right_join(completed) %&gt;%
+  select(-stems)</code></pre>
 </section>
 <section id="step-8---pasting-stem-completed-individual-words-into-their-respective-happy-moments" class="level3">
 <h3>Step 8 - Pasting stem completed individual words into their respective happy moments</h3>
 <p>We want our processed words to resemble the structure of the original happy moments. So we paste the words together to form happy moments.</p>
+<pre class="r"><code>completed &lt;- completed %&gt;%
+  group_by(id) %&gt;%
+  summarise(text = str_c(word, collapse = &quot; &quot;)) %&gt;%
+  ungroup()</code></pre>
 </section>
 <section id="step-9---keeping-a-track-of-the-happy-moments-with-their-own-id" class="level3">
 <h3>Step 9 - Keeping a track of the happy moments with their own ID</h3>
+<pre class="r"><code>hm_data &lt;- hm_data %&gt;%
+  mutate(id = row_number()) %&gt;%
+  inner_join(completed)</code></pre>
 </section>
 </section>
 <section id="my-part" class="level2">
 <h2>my part</h2>
+<pre class="r"><code>source(&quot;wordlists.R&quot;)</code></pre>
 <pre><code>## Loading required package: lattice</code></pre>
 <pre><code>## Loading required package: survival</code></pre>
 <pre><code>## Loading required package: Formula</code></pre>
@@ -361,8 +414,14 @@ $(document).ready(function () {
 <pre><code>## The following objects are masked from 'package:base':
 ## 
 ##     format.pval, round.POSIXt, trunc.POSIXt, units</code></pre>
+<pre class="r"><code>library(stringr)
+hm_data$others &lt;- 0
+for(i in 1:nrow(hm_data)){
+  hm_data$others[i] &lt;- sum(str_detect(hm_data$text[i], others))
+}</code></pre>
 <section id="exporting-the-processed-text-data-into-a-csv-file" class="level3">
 <h3>Exporting the processed text data into a CSV file</h3>
+<pre class="r"><code>write_csv(hm_data, &quot;../output/processed_moments.csv&quot;)</code></pre>
 </section>
 </section>
 <section id="from-the-packages-descriptions" class="level2">

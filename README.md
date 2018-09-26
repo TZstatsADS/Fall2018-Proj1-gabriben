@@ -4,6 +4,8 @@
 
 ### [Project Description](doc/)
 
+## [direct link to html output](http://htmlpreview.github.io/?https://raw.githubusercontent.com/TZstatsADS/Fall2018-Proj1-gabriben/master/doc/Happy%20Alone.html?token=AjhjCOZt2ERhNWxD0D2XP34w5aNrhyuPks5btSrqwA%3D%3D)
+
 Term: Fall 2018
 
 + Projec title: Can we be happy on our own?

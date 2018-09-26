@@ -1,27 +1,52 @@
 ---
-title: "Can we be Happy Alone?"
-author: "Gabriel Benedict"
+title: "Can we be happy on our own?"
+author: "Gabriel Bénédict"
 date: "9/23/2018"
 output: 
   html_document:
     toc: true
-    toc_float: true 
+    toc_float: true
     theme:  paper
 ---
 
+<!-- captions in bold to differentiate them from the text --> 
+<style>
+p.caption {
+  font-weight: bold;
+}
+</style>
+
+
+<style>
+p.comment {
+  background-color: #DBDBDB;
+  padding: 10px;
+  <!-- border: 1px solid black; -->
+  margin-left: 25px;
+  <!-- border-radius: 5px; -->
+  <!-- font-style: italic; -->
+}
+</style>
 
 ![](../figs/alone.gif)
 
+# Introduction
+
 HappyDB is a corpus of 100,000 crowd-sourced happy moments collected over a 3 months period (3/28/2017 - 6/16/2017) via Amazon's Mechanical Turk (see https://arxiv.org/abs/1801.07746). Around 10'000 unique users from around the world submitted in average around 10 happy moments each.
 
-Here, we explore this data set and try to answer the question, "What makes people happy?" More precisely, are people able to be happy on their own? How do those people differ from people who feel happy thanks to their surrounding family, friends?
+Here, we explore this data set and try to answer the question; are people able to be happy on their own? How do those people differ from people who feel happy thanks to their surrounding family, friends?
 
-## What defines self-made happiness?
 
-Let's define it as the capacity to make oneself happy by his own making without the interaction of other known humans, by extension friends and family. We decide here to exclude pets and job relationships, since they can both, to some extent, be categorized as self-made: both relationships with pets and one's job generally rely more heavily on one's own decisions.
+<p class="comment">
+**What defines self-made happiness?** <br>
+Let's define it as the capacity to make oneself happy by his own making, i.e. without the interaction of other known humans, by extension friends and family. We decide here to include pets and job relationships in self-made happiness, since they can both, to some extent, be categorized as self-made: both relationships with pets and one's job generally rely more heavily on one's own decisions.
+</p>
+
+This blog post contains an exploratory data analysis, where the two groups of statemnts (self-made happiness and happiness with others) are compared. After that, a sentiment analysis is shown, where we assess the difference in feelings between the two groups, before drawing some conclusions.
 
 
 ```{r setup, include=FALSE}
+
 knitr::opts_chunk$set(echo = F, warning=F, message=F)
 # enable warnings and messages when changing something
 ```
@@ -37,7 +62,8 @@ packages <- c("tidyverse",
               "ngram", 
               "wordcloud2", 
               "gridExtra",
-              "ggradar")
+              "ggradar",
+              "bookdown")
 
 # ggradar was forked to my github to modify the font.
 # For the original package see https://github.com/ricardo-bion/ggradar
@@ -102,10 +128,10 @@ hm_data <- hm_data %>%
 
 ## Countries
 
-100 countries were sampled unequally as illustrated by the histogram below of the 20 most sampled countries. This renders comparisons difficult. We will only compare USA and India, given that they both contain a relatively high number of observations. The wordcloud below, shows the relative sample size in log scale, so as to be able to see which countries where represented most (such that USA and India are artificially scaled down).
+100 countries were sampled unequally as illustrated by the histogram below of the 20 most sampled countries. This renders comparisons difficult. We will only compare USA and India, given that they both contain a relatively high number of observations. The wordcloud below, shows the relative sample size in log scale, so as to be able to see which countries where represented most (such that USA and India are artificially scaled down in comparison).
 
 
-```{r countries bars, fig.align='center', fig.height = 1.5}
+```{r countries bars, fig.align='center', fig.height = 1.5, fig.cap= "Representation of respondants by country (20 most represented)"}
 
 # generate a frequency table of the occurences of countries 
 
@@ -123,7 +149,7 @@ ggplot(countries[1:20,], aes(country, freq)) +
   geom_bar(stat = "identity") + theme_classic()
 ```
 
-```{r countries cloud, fig.align='center', fig.width = 8}
+```{r countries cloud, fig.align='center', fig.width = 8, fig.cap="Cloud of country representation on the ln scale"}
 
 # wordcloud of log transformed country frequencies
 
@@ -137,12 +163,12 @@ wordcloud2(countries, size = 1, rotateRatio = 0, hoverFunction = NULL)
 ## The happy alone and the happy with others
 
 
-We previously defined what it is to be alone when seeking happiness. In practice, two lists of words, one related to family and one to friends, were used: if a happiness statement contains one of those words, then we categorise the statement as mentioning \texttt{others}. If it doesn't, the statement is considered to describe happiness \texttt{alone}.
+We previously defined what it is to be alone when seeking happiness. In practice, two lists of words, one related to family and one to friends, were combined: if a happiness statement contains one of those words, then we categorise the statement as mentioning `others`. If it doesn't, the statement is considered to describe happiness `alone`.
 
-Once categorization is done, we can attempt to describe what kind of people are those who are happy on their own. The boxplots below show a boxpot of the number of mentions of others per sentence in each category. It seems that there is a trend for married women who have children and who live in India, to be slightly more relyant on others for happiness. This last statement has only few grounding in data, given the obvious similarity betwen those two groups, regarding those variables: a statistical test would show no difference between groups.
+Once categorization is done, we can attempt to describe what kind of people are those who are happy on their own. The boxplots below show the distribution of the number of mentions proportional to sentence size (number of words) in each category. It seems that there is a trend for married women who have children and who live in India, to be slightly more reliant on others for happiness. This last statement has only few grounding in data, given the obvious similarity betwen those two groups, regarding those variables: seeing these boxplots, a statistical test would show no difference between groups.
 
 
-```{r boxplots, fig.align='center', fig.width = 6}
+```{r boxplots, fig.align='center', fig.width = 6, fig.cap = "Number of mentions of others over number of words in statement, against different categorical variables"}
 
 # create boxplots of the two groups against several demographic variables
 
@@ -170,7 +196,7 @@ par(mfrow = c(1,1))
 Regarding age, below is a scatter plot of age against the same indicator (mentions of others over number of words in statement). A blue line and a shaded area show a loess curve and its confidence interval. This seems to imply that our tendency to resort to others in order to fulfill our happiness level remains the same accross time. Note that there is a very slight but discernable decrease (even in the crowded data) suggesting that we might tend to resort less to others for our happiness over time. Note that this is not pure time series data: there is no following of a single person over several ages. This would be required in order to make a strong proof of the previous statement.
 
 
-```{r age, fig.align='center'}
+```{r age, fig.align='center', fig.cap = "Number of mentions of others over number of words in statement, against age"}
 
 # scatter plot with loess curve
 
@@ -183,15 +209,14 @@ ggplot(subset(hm_data, age < 150), aes(age, others/count)) +
       panel.grid.minor = element_blank(),
       axis.line = element_line(colour = 'black', size = .2),
       axis.ticks = element_line(colour = "black", size = .2)) +
-  labs(y = "number of mentions of others per statement")
+  labs(y = "number of mentions of others / number of words in statement")
 # for some reason, some people were over 150 years old.
 ```
 
 
 ## Most used words
 
-As a last exploratory step, two word clouds are ploted illustrating the prevalence of the most used words. Note that the words related to the family have been ignored in the group that did rely on others for happiness, since they do not confer new information.
-
+As a last exploratory step, two word clouds are plotted illustrating the prevalence of the most used words. Note that the words related to the family have been ignored in the group that did rely on others for happiness, since they do not confer new information. A few other stopwords have been defined, so as not to be shown on the final cloud, such as `day`, `night`, `yesterday` etc.
 
 ```{r bag of words, warning=FALSE, message=FALSE}
 
@@ -215,7 +240,7 @@ word_count_others <- word_count_others[! word_count_others$word %in% others,]
 ```
 
 
-```{r fig.width=10, fig.height=6, fig.align='center'}
+```{r fig.width=10, fig.height=6, fig.align='center', fig.cap="10 most common words used in each group"}
 
 # plotting one wordcloud per group
 
@@ -230,22 +255,23 @@ par(mfrow = c(1,1))
 ```
 
 
-It seems that enjoying the instant is something that is easier with friends or family. School can even be part of a happy moment this way. The  When alone, one plays games, watches media and buys goods. Consuming is thus much more of a primary resort for happiness. Alternatively, achievements ("started", "finished") are a great driver for happiness. The presence of \texttt{favorite} probably indicates that more time is devoted to one's preferred activities. Unsurprisingly, pets are a way to find the loving interaction. This can be opposed to interactions with others: \texttt{feel}, \texttt{visit}, \texttt{nice}.
+It seems that enjoying the instant is something that is easier with friends or family. School can even be part of a happy moment this way. When alone, one plays games, watches media and buys goods. Consumption and the use of virtual devices is thus much more of a primary resort for happiness. Alternatively, achievements (`started`, `finished`, `job`) are a great driver for happiness. The presence of `favorite` probably indicates that more time is devoted to one's preferred activities. Unsurprisingly, pets are a way to find the loving interaction. This can be opposed to interactions with others: `feel`, `visit`, `nice`. 
 
-Note the interesting presence of \texttt{night} when alone and \texttt{day} when with others.
+Note that, unsurprisingly, birthdays seem to be something that is highly enjoyable with others but not alone.
 
 
 # Sentiment Analysis
 
 For this part, two different data sets are used: 
-+ `AFINN` which contain words and their bipolar gradation on the scale of negative to positive feelings ([link](http://www2.imm.dtu.dk/pubdb/views/publication_details.php?id=6010))
-+ `nrc` which contains words and their affiliation to eight basic emotions; namely anger, fear, anticipation, trust, surprise, sadness, joy, and disgust([link](http://saifmohammad.com/WebPages/NRC-Emotion-Lexicon.htm))
+
++ `AFINN` which contain words and their bipolar gradation on the scale of negative to positive feelings ([Finn Arup Nielsen](http://www2.imm.dtu.dk/pubdb/views/publication_details.php?id=6010))
++ `nrc` which contains words and their affiliation to eight basic emotions; namely anger, fear, anticipation, trust, surprise, sadness, joy, and disgust ([Saif Mohammad](http://saifmohammad.com/WebPages/NRC-Emotion-Lexicon.htm))
 
 ## From negative to positive feelings
 
-Using the dataset `AFINN` (accessible through the package \texttt{tidytext}), we compute a mean score for each happiness statement, depending on finding matches within `AFINN` and their respective feeling score.
+Using the dataset `AFINN` (accessible through the package `tidytext`), we compute a mean score for each happiness statement, depending on finding matches within `AFINN` and their respective feeling score.
 
-```{r sentScore, fig.align='center'}
+```{r sentScore, fig.align='center', fig.cap = "distribution of average sentiment score per statement in the two groups"}
 
 # match our dataset and AFINN to extract the sentiment scores
 
@@ -275,7 +301,7 @@ There is evidence to suggest that people who resort to family and friends for ha
 
 This time around, words within the happiness statements are matched with words and their respective category among the eight basic emotions (data set `nrc`). This time the overall prevalence of each emotion is measured relative to the seven others. Since a sence of proportionality is already given by the previous operation, there is no need to standardize by the length or number of statements.
 
-```{r sentCat, fig.align='center'}
+```{r sentCat, fig.align='center', fig.cap = "prevalence of words belonging to 8 basic sentiments for each group"}
 
 # match our dataset and nrc to extract the corresponding eight sentiments
 
@@ -333,25 +359,27 @@ From a general point of view, there is no significant difference between the pre
 
 # Conclusion
 
+There does not seem to exist demographic differences between depending on the intensity of the dependence on others for happiness. With the most used words clouds, it was possible to detect some behavioral differences, such as the concentration on achievements for people experiencing happiness on their own. Those people relied more havily on virtual devices though.
 
+Regarding inference on the differences between the two groups of statements (self-made happiness and happiness with others), the most conclusive finding is probably the one linked to the sentiment score `AFINN`: people who rely on others for happy moments seem to have more positive feelings in average.
 
+Summarizing the two previous paragraph, there seems to exist a tension. On one side, happy times with family and friends provide more positive feelings. On the other side, being happy alone can apparently imply a strong reliance on virtual devices / realities. Is that an issue, given that some time alone might allow to focus more on personal goals? 
 
-
-Note that words are dissociated from their context: bad sounding words could be turned into positive naration, given the right context. The results there are to be taken with caution , but we can expect that over the amount of data available, some negative words can be stripped of their meaning. Maybe the usage of Natural Language Processing with full sentences is a solution.
-
-Note that, in order to simplify the analysis, we did not take into account that each person had 3 statements. Rather each statement was taken as a standalone, regardless of whether it was from the same person or not. Aggregating all three statements of each person and analysing data per person instead of per statement would have been another possibility. This supposes homogeneity w
-
-
-> Qu'est-ce que le bonheur sinon le simple accord entre un etre et l existence qu il mene? 
-> (Camus, Noces p.65)
-
-
+> Qu'est-ce que le bonheur sinon le simple accord entre un être et l'existence qu'il mêne? <br/> --- Camus, Noces p.65
 
 \clearpage
 
 # Appendix
 
-### R Packages
+## Notes
+
++ Words are dissociated from their sentence they are in: bad sounding words could be turned into positive naration, given the right context. This could motivate the use of more advanced Natural Language Processing methods that control for syntax and semantic.
+
++ In order to simplify the analysis, we did not take into account that each person had around 9-10 statements each. Rather each statement was taken as a standalone, regardless of whether it was from the same person or not. Aggregating all three statements of each person and analysing data per person instead of per statement would have been another possibility. The drawback of the latter, is that the impact of each sentence is diluted among 9 others.
+
+
+
+## R Packages
 
 + `tidyverse` is an opinionated collection of R packages designed for data science. All packages share an underlying design philosophy, grammar, and data structures;
 + `tidytext` allows text mining using 'dplyr', 'ggplot2', and other tidy tools;
@@ -363,14 +391,14 @@ Note that, in order to simplify the analysis, we did not take into account that 
 
 The code was run on macOS 10.13.6 with `r R.Version()$version.string`
 
-### References
+## References
 
 + Akari Asai, Sara Evensen, Behzad Golshan, Alon Halevy, Vivian Li, Andrei Lopatenko, Daniela Stepanov, Yoshihiko Suhara, Wang-Chiew Tan, Yinzhan Xu, "HappyDB: A Corpus of 100,000 Crowdsourced Happy Moments", LREC '18, May 2018. (to appear)
 + Silge, J., & Robinson, D. (2017). Text mining with R: A tidy approach.
 
 
 
-### R Script
+## R Script
 
 ```{r ref.label=knitr::all_labels(),echo=TRUE,eval=FALSE, tidy = F}
 

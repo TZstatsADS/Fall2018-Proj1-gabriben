@@ -5,23 +5,23 @@
 ![image](figs/title.jpeg)
 
 ### [Project Description](doc/)
-This is the first and only *individual* (as opposed to *team*) this semester. 
 
 Term: Fall 2018
 
-+ Projec title: Can we be Happy Alone?
++ Projec title: Can we be happy on our own?
 + This project is conducted by Gabriel Benedict
 
 + Project summary: We are provided with more and more opportunities to
   spend our time on virtual platforms. Does that impact our way of
   seeking happiness? Do we resort to those virtual platforms to
   compensate for the lack of an entourage of friends and family or do we
-  purposedly use this alone time to ? And
-  if we do is there 
+  purposedly use this alone time to ? More generally, are people able
+  to be happy on their own? How do those people differ from people who
+  feel happy thanks to their surrounding family, friends? This blog
+  post uses 100'000 statement about people's happy moments to explore
+  and draw inference on that subject.
 
-[a short summary] Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-
-Following [suggestions](http://nicercode.github.io/blog/2013-04-05-projects/) by [RICH FITZJOHN](http://nicercode.github.io/about/#Team) (@richfitz). This folder is orgarnized as follows.
+This folder is orgarnized as follows.
 
 ```
 proj/

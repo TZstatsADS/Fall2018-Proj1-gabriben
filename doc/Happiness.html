@@ -313,10 +313,17 @@ $(document).ready(function () {
 <section id="intro" class="level2">
 <h2>Intro</h2>
 <p>HappyDB is a corpus of 100,000 crowd-sourced happy moments via Amazon’s Mechanical Turk. You can read more about it on <a href="https://arxiv.org/abs/1801.07746" class="uri">https://arxiv.org/abs/1801.07746</a></p>
-<pre class="r"><code>library(tm)
-library(tidytext)
-library(tidyverse)
-library(DT)</code></pre>
+<pre class="r"><code>packages &lt;- c(&quot;tidyverse&quot;, 
+              &quot;tidytext&quot;, 
+              &quot;tm&quot;, 
+              &quot;DT&quot;,
+              &quot;Hmisc&quot;)
+
+# Install and load packages only if needed
+package.check &lt;- lapply(packages, FUN = function(x) {
+  if (!require(x, character.only = T)) install.packages(x)
+  if (! (x %in% (.packages() )))  library(x, character.only = T)
+})</code></pre>
 <section id="step-1---load-the-data-to-be-cleaned-and-processed" class="level3">
 <h3>Step 1 - Load the data to be cleaned and processed</h3>
 <pre class="r"><code>urlfile &lt;- 'https://raw.githubusercontent.com/rit-public/HappyDB/master/happydb/data/cleaned_hm.csv'
@@ -400,21 +407,12 @@ stop_words &lt;- stop_words %&gt;%
   inner_join(completed)</code></pre>
 </section>
 </section>
-<section id="my-part" class="level2">
-<h2>my part</h2>
-<pre class="r"><code>source(&quot;wordlists.R&quot;)</code></pre>
-<pre><code>## Loading required package: lattice</code></pre>
-<pre><code>## Loading required package: survival</code></pre>
-<pre><code>## Loading required package: Formula</code></pre>
-<pre><code>## 
-## Attaching package: 'Hmisc'</code></pre>
-<pre><code>## The following objects are masked from 'package:dplyr':
-## 
-##     combine, src, summarize</code></pre>
-<pre><code>## The following objects are masked from 'package:base':
-## 
-##     format.pval, round.POSIXt, trunc.POSIXt, units</code></pre>
-<pre class="r"><code>library(stringr)
+<section id="classifying-statements-happiness-alone-or-with-others" class="level2">
+<h2>Classifying statements: happiness alone or with others</h2>
+<pre class="r"><code># preprocessed words associated with being with others (family and friends)
+source(&quot;wordlists.R&quot;)
+
+library(stringr)
 hm_data$others &lt;- 0
 for(i in 1:nrow(hm_data)){
   hm_data$others[i] &lt;- sum(str_detect(hm_data$text[i], others))
@@ -424,15 +422,16 @@ for(i in 1:nrow(hm_data)){
 <pre class="r"><code>write_csv(hm_data, &quot;../output/processed_moments.csv&quot;)</code></pre>
 </section>
 </section>
-<section id="from-the-packages-descriptions" class="level2">
-<h2>From the packages’ descriptions:</h2>
+<section id="packages-descriptions" class="level2">
+<h2>Packages’ descriptions:</h2>
 <ul>
 <li><code>tm</code> is a framework for text mining applications within R;</li>
 <li><code>tidyverse</code> is an opinionated collection of R packages designed for data science. All packages share an underlying design philosophy, grammar, and data structures;</li>
 <li><code>tidytext</code> allows text mining using ‘dplyr’, ‘ggplot2’, and other tidy tools;</li>
 <li><code>DT</code> provides an R interface to the JavaScript library DataTables.</li>
+<li><code>Hmisc</code> Contains many functions useful for data analysis, high-level graphics, utility operations, functions for computing sample size and power, importing and annotating datasets, imputing missing values, advanced table making, variable clustering, character string manipulation, conversion of R objects to LaTeX and html code, and recoding variables.</li>
 </ul>
-<p>And state clearly that your Rnotebook requires so and so packages in your R notebook and what system you are running also helps.</p>
+<p>The code was run on macOS 10.13.6 with R version 3.4.4 (2018-03-15)</p>
 </section>
 
 

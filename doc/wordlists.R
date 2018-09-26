@@ -1,5 +1,16 @@
+# create the list of words affiliated with family and friends from the web
+
 # copy pasted from this website:
 # https://www.enchantedlearning.com/wordlist/
+
+
+packages <- c("Hmisc")
+
+# Install and load packages only if needed
+package.check <- lapply(packages, FUN = function(x) {
+  if (!require(x, character.only = T)) install.packages(x)
+  if (! (x %in% (.packages() )))  library(x, character.only = T)
+})
 
 
 
@@ -395,8 +406,7 @@ family <- "A
            youngster
            youth"
 
-
-library(Hmisc)
+# merging and processing
 others <- paste(family, friends)
 others <- string.break.line(others)
 others <- gsub(" ", "", others[[1]], fixed = TRUE) # get rid of spaces

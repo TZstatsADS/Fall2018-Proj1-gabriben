@@ -6,7 +6,7 @@ output: html_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = F, warning=F, message=F)
+knitr::opts_chunk$set(echo = T, warning=F, message=F)
 # enable warnings and messages when changing something
 ```
 
@@ -19,7 +19,8 @@ HappyDB is a corpus of 100,000 crowd-sourced happy moments via Amazon's Mechanic
 packages <- c("tidyverse", 
               "tidytext", 
               "tm", 
-              "DT")
+              "DT",
+              "Hmisc")
 
 # Install and load packages only if needed
 package.check <- lapply(packages, FUN = function(x) {
@@ -163,15 +164,12 @@ write_csv(hm_data, "../output/processed_moments.csv")
 ```
 
 
-
-
-
-
-## From the packages' descriptions:
+## Packages' descriptions:
 
 + `tm` is a framework for text mining applications within R;
 + `tidyverse` is an opinionated collection of R packages designed for data science. All packages share an underlying design philosophy, grammar, and data structures;
 + `tidytext` allows text mining using 'dplyr', 'ggplot2', and other tidy tools;
 + `DT` provides an R interface to the JavaScript library DataTables.
++ `Hmisc` Contains many functions useful for data analysis, high-level graphics, utility operations, functions for computing sample size and power, importing and annotating datasets, imputing missing values, advanced table making, variable clustering, character string manipulation, conversion of R objects to LaTeX and html code, and recoding variables.
 
 The code was run on macOS 10.13.6 with `r R.Version()$version.string`

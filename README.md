@@ -4,7 +4,7 @@
 
 ### [Project Description](doc/)
 
-### [Direct link to html output](http://htmlpreview.github.io/?https://raw.githubusercontent.com/TZstatsADS/Fall2018-Proj1-gabriben/master/doc/Happy%20Alone.html?token=AjhjCOZt2ERhNWxD0D2XP34w5aNrhyuPks5btSrqwA%3D%3D)
+### [Direct link to html output](https://gabriben.github.io)
 
 Term: Fall 2018
 

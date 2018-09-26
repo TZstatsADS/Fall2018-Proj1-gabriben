@@ -15,7 +15,7 @@ Term: Fall 2018
   spend our time on virtual platforms. Does that impact our way of
   seeking happiness? Do we resort to those virtual platforms to
   compensate for the lack of an entourage of friends and family or do we
-  purposedly use this alone time to ? More generally, are people able
+  purposedly use this alone time to focus on own goals? More generally, are people able
   to be happy on their own? How do those people differ from people who
   feel happy thanks to their surrounding family, friends? This blog
   post uses 100'000 statement about people's happy moments to explore
